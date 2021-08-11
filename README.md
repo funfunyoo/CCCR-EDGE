@@ -1,3 +1,3 @@
-# Edge Computing Course of CCCR-EDU
+## Edge Computing Course of CCCR-EDU
 
 Github for Edge Computing Course
