@@ -1,0 +1,202 @@
+
+ [ CCCR-EDU ]  Edge Computing 실습 과정  
+ -----------------------------------------------
+ 
+ >>> 실습 준비
+ 
+ 1. 실습 사이트 주소 -> http://112.217.198.155   (Signup & Login)
+ 
+ 2. 실습 예제 Github 주소 -> https://github.com/funfunyoo/CCCR-EDGE
+ 
+ 3. 실습 예제 다운로드 -> $ git clone https://github.com/funfunyoo/CCCR-EDGE
+ 
+ 
+ >>> 실습 1 : 도커(docker) & 쿠버네티스(kubernetes) 설치 
+ 
+ $ cd CCCR-EDGE
+ $ chmod a+x install-docker-k8s.sh
+ $ chmod a+x init-k8s.sh
+ 
+ $ sudo ./install-docker-k8s.sh
+ 
+ 설치 후 터미널에서 exit 명령어 혹은 Ctrl+d 를 입력하여 로그아웃 후 재로그인 한 후
+ 
+ $ docker ps -a
+ $ docker run hello-world
+ $ docker run -i -t ubuntu:14.04
+ 
+ 등으로 도커 설치 확인
+ 
+ 도커 관련 명령어
+ 
+ $ docker run 이미지
+ $ docker ps -a
+ $ docker stop 컨테이너_이름
+ $ docker rm 컨테이너_이름
+ 
+ 
+ 
+ >>> 실습 2 : 도커(docker) 이미지 빌드
+ 
+ 도커 이미지 빌드를 위한 Dockerfile 생성 -> 예제 파일들 중 "Dockerfile" 파일 참조
+ 
+ $ docker build -t nginx .
+ 
+ $ docker images
+ 
+ $ docker rmi nginx
+ 
+ 
+ 
+ 
+ >>> 실습 3 : 쿠버네티스(kubernetes) 클러스터 구성
+ 
+ $ sudo ./init-k8s.sh
+ 
+ 수강번호 : _      <- 각자 수강생(서버) 번호를 입력 : 예) 수상생(서버) 번호가 '1' 일 경우 
+ 
+ 
+ 설치 스크립트가 정상적으로 쿠버네티스 클러스터를 구성했는지 확인
+ 
+ $ kubectl get node
+ 
+ NAMESPACE            NAME                                           READY   STATUS             RESTARTS   AGE
+kube-system          pod/calico-kube-controllers-58497c65d5-6cfcg   1/1     Running            0          24m
+kube-system          pod/calico-node-mmg6b                          1/1     Running            0          24m
+kube-system          pod/coredns-78fcd69978-5jczq                   1/1     Running            0          24m
+kube-system          pod/coredns-78fcd69978-mbm9z                   1/1     Running            0          24m
+kube-system          pod/etcd-vraptor                               1/1     Running            4          24m
+kube-system          pod/kube-apiserver-vraptor                     1/1     Running            4          24m
+kube-system          pod/kube-controller-manager-vraptor            1/1     Running            4          24m
+kube-system          pod/kube-proxy-7lsph                           1/1     Running            0          24m
+kube-system          pod/kube-scheduler-vraptor                     1/1     Running            3          24m
+local-path-storage   pod/local-path-provisioner-556d4466c8-qwnvd    1/1     Running            0          24m
+metallb-system       pod/controller-8687cdc65-f4r26                 1/1     Running            0          24m
+metallb-system       pod/speaker-wpwg7                              1/1     Running            0          24m
+
+NAMESPACE     NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                  AGE
+default       service/kubernetes        ClusterIP      10.96.0.1      <none>           443/TCP                  24m
+kube-system   service/kube-dns          ClusterIP      10.96.0.10     <none>           53/UDP,53/TCP,9153/TCP   24m
+
+NAMESPACE        NAME                         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE
+kube-system      daemonset.apps/calico-node   1         1         1       1            1           kubernetes.io/os=linux        24m
+kube-system      daemonset.apps/kube-proxy    1         1         1       1            1           kubernetes.io/os=linux        24m
+metallb-system   daemonset.apps/speaker       1         1         1       1            1           beta.kubernetes.io/os=linux   24m
+
+NAMESPACE            NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE
+kube-system          deployment.apps/calico-kube-controllers   1/1     1            1           24m
+kube-system          deployment.apps/coredns                   2/2     2            2           24m
+local-path-storage   deployment.apps/local-path-provisioner    1/1     1            1           24m
+metallb-system       deployment.apps/controller                1/1     1            1           24m
+
+NAMESPACE            NAME                                                 DESIRED   CURRENT   READY   AGE
+kube-system          replicaset.apps/calico-kube-controllers-58497c65d5   1         1         1       24m
+kube-system          replicaset.apps/coredns-78fcd69978                   2         2         2       24m
+local-path-storage   replicaset.apps/local-path-provisioner-556d4466c8    1         1         1       24m
+metallb-system       replicaset.apps/controller-8687cdc65                 1         1         1       24m
+
+
+ -> 만약 정상적으로 구성되지 않았다면 다시 한번 스크립트 실행
+ 
+ $ sudo ./init-k8s.sh
+ 
+ 
+ 
+ 
+ >>> 실습 4 : node.js 서비스 올려보기
+ 
+ nodejs.yaml 파일로 node.js 디플로이먼트 및 서비스 생성
+ 
+ $ kubectl create -f nodejs.yaml
+ 
+ POD 및 서비스가 정상적으로 생성되었는지 확인
+ 
+ $ kubectl get all -o wide
+ 
+ 구성된 POD 의 세부적인 정보를 자세히 확인
+ 
+ $ kubectl get pod -o wide
+ 
+ 설정된 외부 접속 IP 주소 확인
+ 
+ $ kubectl get svc -o wide
+ 
+ 로드밸런서 타입의 서비스와 연결된 POD 의 IP 주소를 확인
+ 
+ $ kubectl get endpoints
+ 
+ curl 명령어로 node.js 서비스 실행화면 확인
+ 
+ $ watch -n 1 -d curl 192.168.100.11
+ 
+ 웹브라우저로 접속하여 node.js 서비스 실행화면 확인
+ 
+ http://112.217.198.155:11080 으로 접속
+ 
+ ------------------------------------------------------------
+ kubectl get svc 명령어로 나온 Externl IP 뒷자리에 080 을 붙여서 접속
+ 
+ 예시) 
+ 
+ 1번수강생
+ 
+ 배정되는 IP
+ 192.168.100.11 > 112.217.198.155:11080
+ 192.168.100.12 > 112.217.198.155:12080
+ 
+ 15번수강생
+ 
+ 배정되는 IP
+ 192.168.100.39 > 112.217.198.155:39080
+ 192.168.100.40 > 112.217.198.155:40080
+ ------------------------------------------------------------
+ 
+ 생성된 리소스들을 삭제
+ 
+ $ kubectl delete -f nodejs.yaml
+ 
+ 
+ 
+ 
+ >>> 실습 5 : wordpress 서비스 올려보기
+ 
+ kustomization.yaml 을 통해 관련 리소스를 생성
+
+ $ kubectl apply -k ./
+
+ 리소스가 생성 되었는지 확인
+ 
+ $ kubectl get all -o wide
+ 
+ POD 및 서비스가 정상적으로 생성되었는지 확인
+ 
+ $ kubectl get all -o wide
+ 
+ 구성된 POD 의 세부적인 정보를 자세히 확인
+ 
+ $ kubectl get pod -o wide
+ 
+ 설정된 외부 접속 IP 주소 확인
+ 
+ $ kubectl get svc -o wide
+ 
+ 로드밸런서 타입의 서비스와 연결된 POD 의 IP 주소를 확인
+ 
+ $ kubectl get endpoints
+ 
+ curl 명령어로 node.js 서비스 실행화면 확인
+ 
+ $ watch -n 1 -d curl 192.168.100.11
+ 
+ 웹브라우저로 접속하여 node.js 서비스 실행화면 확인
+ 
+ http://112.217.198.155:11080 으로 접속
+
+
+ 생성된 리소스들을 삭제
+ 
+ $ kubectl delete -f -k ./
+ 
+ 
+ 
+ 
